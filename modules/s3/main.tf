@@ -1,15 +1,28 @@
 resource "aws_s3_bucket" "this" {
   bucket = var.bucket_name
-  acl    = "private"
-  versioning { enabled = true }
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
+  tags = { Name = var.name }
+}
+
+resource "aws_s3_bucket_acl" "this" {
+  bucket = aws_s3_bucket.this.id
+  acl    = var.public_access ? "public-read" : "private"
+}
+
+resource "aws_s3_bucket_versioning" "this" {
+  bucket = aws_s3_bucket.this.id
+  versioning_configuration {
+    status = var.versioning ? "Enabled" : "Suspended"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
+  bucket = aws_s3_bucket.this.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
-  tags = { Name = var.name }
 }
 
 resource "aws_s3_bucket_public_access_block" "block" {
