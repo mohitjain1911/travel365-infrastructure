@@ -1,0 +1,25 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Terraform
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+.crash.log
+*.tfplan
+plan.json
+infracost-output.json
+infracost-report.html
+terraform.tfvars
+*.tfvars
+
+# Temporary copies created during editing
+terraform/environments/development_tmp/
+terraform/tmp_dev/
