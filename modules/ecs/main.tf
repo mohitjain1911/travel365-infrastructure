@@ -3,11 +3,13 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_cloudwatch_log_group" "backend" {
+  count = var.backend_image != "" ? 1 : 0
   name = "/ecs/${var.cluster_name}-backend"
   retention_in_days = 30
 }
 
 resource "aws_ecs_task_definition" "backend" {
+  count = var.backend_image != "" ? 1 : 0
   family = "${var.cluster_name}-backend"
   requires_compatibilities = ["FARGATE"]
   network_mode = "awsvpc"
@@ -25,7 +27,7 @@ resource "aws_ecs_task_definition" "backend" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group" = aws_cloudwatch_log_group.backend.name
+          "awslogs-group" = aws_cloudwatch_log_group.backend[0].name
           "awslogs-region" = var.region
           "awslogs-stream-prefix" = "backend"
         }
@@ -36,9 +38,10 @@ resource "aws_ecs_task_definition" "backend" {
 }
 
 resource "aws_ecs_service" "backend" {
+  count = var.backend_image != "" ? 1 : 0
   name = "${var.cluster_name}-backend"
   cluster = aws_ecs_cluster.this.id
-  task_definition = aws_ecs_task_definition.backend.arn
+  task_definition = aws_ecs_task_definition.backend[count.index].arn
   desired_count = var.backend_desired_count
   launch_type = "FARGATE"
   network_configuration {
@@ -51,11 +54,13 @@ resource "aws_ecs_service" "backend" {
 }
 
 resource "aws_cloudwatch_log_group" "frontend" {
+  count = var.frontend_image != "" ? 1 : 0
   name = "/ecs/${var.cluster_name}-frontend"
   retention_in_days = 30
 }
 
 resource "aws_ecs_task_definition" "frontend" {
+  count = var.frontend_image != "" ? 1 : 0
   family = "${var.cluster_name}-frontend"
   requires_compatibilities = ["FARGATE"]
   network_mode = "awsvpc"
@@ -73,7 +78,7 @@ resource "aws_ecs_task_definition" "frontend" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group" = aws_cloudwatch_log_group.frontend.name
+          "awslogs-group" = aws_cloudwatch_log_group.frontend[0].name
           "awslogs-region" = var.region
           "awslogs-stream-prefix" = "frontend"
         }
@@ -84,9 +89,10 @@ resource "aws_ecs_task_definition" "frontend" {
 }
 
 resource "aws_ecs_service" "frontend" {
+  count = var.frontend_image != "" ? 1 : 0
   name = "${var.cluster_name}-frontend"
   cluster = aws_ecs_cluster.this.id
-  task_definition = aws_ecs_task_definition.frontend.arn
+  task_definition = aws_ecs_task_definition.frontend[count.index].arn
   desired_count = var.frontend_desired_count
   launch_type = "FARGATE"
   network_configuration {
@@ -98,7 +104,7 @@ resource "aws_ecs_service" "frontend" {
   deployment_maximum_percent = 200
 
   dynamic "load_balancer" {
-    for_each = contains(keys(var.target_group_arns), "frontend") ? [1] : []
+    for_each = (var.frontend_image != "" && contains(keys(var.target_group_arns), "frontend")) ? [1] : []
     content {
       target_group_arn = var.target_group_arns["frontend"]
       container_name = "frontend"
@@ -108,11 +114,13 @@ resource "aws_ecs_service" "frontend" {
 }
 
 resource "aws_cloudwatch_log_group" "admin" {
+  count = var.admin_image != "" ? 1 : 0
   name = "/ecs/${var.cluster_name}-admin"
   retention_in_days = 30
 }
 
 resource "aws_ecs_task_definition" "admin" {
+  count = var.admin_image != "" ? 1 : 0
   family = "${var.cluster_name}-admin"
   requires_compatibilities = ["FARGATE"]
   network_mode = "awsvpc"
@@ -130,7 +138,7 @@ resource "aws_ecs_task_definition" "admin" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group" = aws_cloudwatch_log_group.admin.name
+          "awslogs-group" = aws_cloudwatch_log_group.admin[0].name
           "awslogs-region" = var.region
           "awslogs-stream-prefix" = "admin"
         }
@@ -141,9 +149,10 @@ resource "aws_ecs_task_definition" "admin" {
 }
 
 resource "aws_ecs_service" "admin" {
+  count = var.admin_image != "" ? 1 : 0
   name = "${var.cluster_name}-admin"
   cluster = aws_ecs_cluster.this.id
-  task_definition = aws_ecs_task_definition.admin.arn
+  task_definition = aws_ecs_task_definition.admin[count.index].arn
   desired_count = var.admin_desired_count
   launch_type = "FARGATE"
   network_configuration {
@@ -155,7 +164,7 @@ resource "aws_ecs_service" "admin" {
   deployment_maximum_percent = 200
 
   dynamic "load_balancer" {
-    for_each = contains(keys(var.target_group_arns), "admin") ? [1] : []
+    for_each = (var.admin_image != "" && contains(keys(var.target_group_arns), "admin")) ? [1] : []
     content {
       target_group_arn = var.target_group_arns["admin"]
       container_name = "admin"
