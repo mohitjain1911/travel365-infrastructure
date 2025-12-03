@@ -28,7 +28,7 @@ jobs:
 
       - name: Set working dir and image
         run: |
-          echo "TF_WORKING_DIR=./terraform/environments/development" >> $GITHUB_ENV
+          echo "TF_WORKING_DIR=./environments/development" >> $GITHUB_ENV
           echo "FRONTEND_IMAGE=${{ github.event.client_payload.image }}" >> $GITHUB_ENV
 
       - name: Terraform Init
