@@ -19,7 +19,7 @@ infracost-output.json
 infracost-report.html
 terraform.tfvars
 *.tfvars
-
+./environments/development/.terraform.lock.hcl
 # Temporary copies created during editing
 terraform/environments/development_tmp/
 terraform/tmp_dev/
