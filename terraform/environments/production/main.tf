@@ -123,7 +123,20 @@ module "redis" {
   node_type = "cache.t4g.micro"
 }
 
-# ECS cluster and services (images from variables)
+# ALB (create basic ALB)
+module "alb" {
+  source = "../../modules/alb"
+  name = local.name
+  public_subnet_ids = module.vpc.public_subnet_ids
+  vpc_id = module.vpc.vpc_id
+  security_group_ids = [aws_security_group.alb.id]
+  target_groups = {
+    backend = { port = 8080, tg_name = "${local.name}-backend-tg", health_path = "/health" }
+    frontend = { port = 80, tg_name = "${local.name}-frontend-tg", health_path = "/" }
+  }
+}
+
+# ECS cluster and services (images from variables) - ECS now receives ALB target group ARNs
 module "ecs" {
   source = "../../modules/ecs"
   name = local.name
@@ -138,19 +151,7 @@ module "ecs" {
   backend_desired_count = 2
   frontend_desired_count = 2
   admin_desired_count = 1
-}
-
-# ALB (create basic ALB)
-module "alb" {
-  source = "../../modules/alb"
-  name = local.name
-  public_subnet_ids = module.vpc.public_subnet_ids
-  vpc_id = module.vpc.vpc_id
-  security_group_ids = [aws_security_group.alb.id]
-  target_groups = {
-    backend = { port = 8080, tg_name = "${local.name}-backend-tg", health_path = "/health" }
-    frontend = { port = 80, tg_name = "${local.name}-frontend-tg", health_path = "/" }
-  }
+  target_group_arns = try(module.alb.target_group_arns, {})
 }
 
 # CloudFront & Route53 optional: create only if domain and create_hosted_zone true

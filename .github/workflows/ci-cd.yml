@@ -18,7 +18,7 @@ jobs:
 
     env:
       AWS_REGION: eu-west-2
-      TF_WORKING_DIR: ./environments/production
+      TF_WORKING_DIR: ./environments/development
 
     steps:
       # 1. Checkout repository

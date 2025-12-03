@@ -1,0 +1,47 @@
+name: Deploy on repository_dispatch
+
+on:
+  repository_dispatch:
+    types: [frontend_deployed]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.TF_ROLE_TO_ASSUME }}
+          aws-region: eu-west-2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Set working dir and image
+        run: |
+          echo "TF_WORKING_DIR=./terraform/environments/production" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=${{ github.event.client_payload.image }}" >> $GITHUB_ENV
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        id: plan
+        run: |
+          terraform plan -out=tfplan.binary -var "frontend_image=${{ env.FRONTEND_IMAGE }}"
+
+      - name: Terraform Apply
+        if: github.event.client_payload.image != ''
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve tfplan.binary
