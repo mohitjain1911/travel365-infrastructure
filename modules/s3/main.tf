@@ -3,11 +3,6 @@ resource "aws_s3_bucket" "this" {
   tags = { Name = var.name }
 }
 
-resource "aws_s3_bucket_acl" "this" {
-  bucket = aws_s3_bucket.this.id
-  acl    = var.public_access ? "public-read" : "private"
-}
-
 resource "aws_s3_bucket_versioning" "this" {
   bucket = aws_s3_bucket.this.id
   versioning_configuration {
