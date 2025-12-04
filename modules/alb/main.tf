@@ -17,6 +17,7 @@ resource "aws_lb_target_group" "tgs" {
   port = each.value.port
   protocol = "HTTP"
   vpc_id = var.vpc_id
+  target_type = try(each.value.target_type, "instance")
   health_check {
     path = each.value.health_path
     protocol = "HTTP"
